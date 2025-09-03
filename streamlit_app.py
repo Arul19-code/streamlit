@@ -1,46 +1,49 @@
 import streamlit as st
 from transformers import pipeline
 
-# ---- Streamlit page config ----
-st.set_page_config(page_title="KNIGHT ChatGPT", layout="centered")
-
-# ---- Load model (cached) ----
+# ---- Load model (cached for speed) ----
 @st.cache_resource
 def load_model():
-    return pipeline("text-generation", model="distilgpt2")
-
+    return pipeline("text-generation", model="Salesforce/codegen-350M-mono")
 generator = load_model()
 
-# ---- UI ----
-st.markdown("<h2 style='text-align:center;'>KNIGHT ChatGPT</h2>", unsafe_allow_html=True)
+# ---- Streamlit UI ----
+st.set_page_config(page_title="Mini GPT", layout="centered")
+st.markdown("<h2 style='text-align:center;'>🤖 Mini GPT Chatbot</h2>", unsafe_allow_html=True)
 
-# Session history
+# Initialize session history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Show chat history
+# Display chat history
 for msg in st.session_state.messages:
     role = "🧑 You" if msg["role"] == "user" else "🤖 Bot"
     st.markdown(f"**{role}:** {msg['content']}")
 
-# Input
-user_input = st.text_input("Type your message:")
-if st.button("Send") and user_input:
+# Input box
+user_input = st.text_input("Type your message...")
+if user_input:
     # Save user message
     st.session_state.messages.append({"role": "user", "content": user_input})
+    st.markdown(f"**🧑 You:** {user_input}")
 
-    # Generate reply
+    # ---- Generate bot reply ----
     with st.spinner("Bot is typing..."):
-        prompt = f"You are a helpful assistant.\nUser: {user_input}\nAssistant:"
+        # Instruction prompt for phi-2
+        prompt = f"You are a helpful coding assistant.\nUser: {user_input}\nAssistant:"
+        
+        # Generate response
         response = generator(
             prompt,
-            max_length=150,
+            max_length=250,        # longer responses
             num_return_sequences=1,
-            do_sample=True,
-            temperature=0.7
+            do_sample=True,        # adds variety
+            temperature=0.7        # creativity
         )[0]["generated_text"]
+
+        # Extract reply (remove the prompt from generated text)
         reply = response[len(prompt):].strip()
 
-    # Save & display reply
+    # Save & display bot reply
     st.session_state.messages.append({"role": "bot", "content": reply})
-    st.experimental_rerun()
+    st.markdown(f"**🤖 Bot:** {reply}")
