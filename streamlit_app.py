@@ -1,5 +1,6 @@
 import streamlit as st
 from transformers import pipeline
+import time
 
 # ---- Page config ----
 st.set_page_config(page_title="Mini GPT", layout="centered")
@@ -7,7 +8,6 @@ st.set_page_config(page_title="Mini GPT", layout="centered")
 # ---- Load model ----
 @st.cache_resource
 def load_model():
-    # Chat-friendly small model
     return pipeline("text-generation", model="microsoft/DialoGPT-medium")
 
 generator = load_model()
@@ -26,6 +26,7 @@ for msg in st.session_state.messages:
     if role == "user":
         st.markdown(f"<div style='background:#0b93f6;color:white;padding:10px;border-radius:12px;margin:5px 0;max-width:70%;margin-left:auto;text-align:right'>{content}</div>", unsafe_allow_html=True)
     else:
+        # Typing animation placeholder handled below
         st.markdown(f"<div style='background:#444654;color:#ececec;padding:10px;border-radius:12px;margin:5px 0;max-width:70%;margin-right:auto;text-align:left'>{content}</div>", unsafe_allow_html=True)
 
 # ---- Input form ----
@@ -47,6 +48,18 @@ if submit_button and user_input:
             temperature=0.7
         )[0]["generated_text"]
 
-        # Clean reply
         reply = response.strip()
+
+        # ---- Typing animation ----
+        animated_reply = ""
+        bot_msg_placeholder = st.empty()  # placeholder for animation
+        for char in reply:
+            animated_reply += char
+            bot_msg_placeholder.markdown(
+                f"<div style='background:#444654;color:#ececec;padding:10px;border-radius:12px;margin:5px 0;max-width:70%;margin-right:auto;text-align:left'>{animated_reply}</div>",
+                unsafe_allow_html=True
+            )
+            time.sleep(0.02)  # 20ms per character, adjust for speed
+
+        # Save final bot reply
         st.session_state.messages.append({"role": "bot", "content": reply})
