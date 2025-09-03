@@ -4,7 +4,7 @@ from transformers import pipeline
 # Load a small Hugging Face model (runs locally, no API calls)
 @st.cache_resource
 def load_model():
-    return pipeline("text-to-speech", model="microsoft/VibeVoice-1.5B")
+    return pipeline("text-generation", model="microsoft/phi-2")
 
 generator = load_model()
 
