@@ -4,11 +4,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 # ---- Load model (cached for speed) ----
 @st.cache_resource
 def load_model():
-    tokenizer = AutoTokenizer.from_pretrained("microsoft/phi-2")
-    model = AutoModelForCausalLM.from_pretrained("microsoft/phi-2")
-    # Use text-generation pipeline
-    return pipeline("text-generation", model=model, tokenizer=tokenizer)
-
+    return pipeline("text-generation", model="microsoft/DialoGPT-medium")
 generator = load_model()
 
 # ---- Streamlit UI ----
