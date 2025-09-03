@@ -1,17 +1,18 @@
 import streamlit as st
 from transformers import pipeline
 
-# Load a small Hugging Face model (runs locally, no API calls)
+# ---- Streamlit page config ----
+st.set_page_config(page_title="KNIGHT ChatGPT", layout="centered")
+
+# ---- Load model (cached) ----
 @st.cache_resource
 def load_model():
     return pipeline("text-generation", model="distilgpt2")
 
 generator = load_model()
 
-# ---- Streamlit UI ----
-st.set_page_config(page_title="Mini GPT", layout="centered")
-
-st.markdown("<h2 style='text-align:center;'>🤖 Mini GPT Chatbot</h2>", unsafe_allow_html=True)
+# ---- UI ----
+st.markdown("<h2 style='text-align:center;'>KNIGHT ChatGPT</h2>", unsafe_allow_html=True)
 
 # Session history
 if "messages" not in st.session_state:
@@ -22,25 +23,24 @@ for msg in st.session_state.messages:
     role = "🧑 You" if msg["role"] == "user" else "🤖 Bot"
     st.markdown(f"**{role}:** {msg['content']}")
 
-# Input box
-user_input = st.chat_input("Type your message...")
-
-if user_input:
+# Input
+user_input = st.text_input("Type your message:")
+if st.button("Send") and user_input:
     # Save user message
     st.session_state.messages.append({"role": "user", "content": user_input})
-    st.markdown(f"**🧑 You:** {user_input}")
 
     # Generate reply
     with st.spinner("Bot is typing..."):
+        prompt = f"You are a helpful assistant.\nUser: {user_input}\nAssistant:"
         response = generator(
-            user_input,
-            max_length=100,
+            prompt,
+            max_length=150,
             num_return_sequences=1,
-            pad_token_id=50256  # avoids warning for GPT-2
+            do_sample=True,
+            temperature=0.7
         )[0]["generated_text"]
-
-        reply = response[len(user_input):].strip()
+        reply = response[len(prompt):].strip()
 
     # Save & display reply
     st.session_state.messages.append({"role": "bot", "content": reply})
-    st.markdown(f"**🤖 Bot:** {reply}")
+    st.experimental_rerun()
