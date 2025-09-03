@@ -1,5 +1,5 @@
 import streamlit as st
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import pipeline
 
 # ---- Load model (cached for speed) ----
 @st.cache_resource
