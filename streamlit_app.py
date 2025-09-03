@@ -1,49 +1,46 @@
 import streamlit as st
 from transformers import pipeline
 
-# ---- Load model (cached for speed) ----
+# Load a small Hugging Face model (runs locally, no API calls)
 @st.cache_resource
 def load_model():
-    return pipeline("text-generation", model="microsoft/DialoGPT-medium")
+    return pipeline("text-generation", model="distilgpt2")
+
 generator = load_model()
 
 # ---- Streamlit UI ----
 st.set_page_config(page_title="Mini GPT", layout="centered")
+
 st.markdown("<h2 style='text-align:center;'>🤖 Mini GPT Chatbot</h2>", unsafe_allow_html=True)
 
-# Initialize session history
+# Session history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat history
+# Show chat history
 for msg in st.session_state.messages:
     role = "🧑 You" if msg["role"] == "user" else "🤖 Bot"
     st.markdown(f"**{role}:** {msg['content']}")
 
 # Input box
 user_input = st.chat_input("Type your message...")
+
 if user_input:
     # Save user message
     st.session_state.messages.append({"role": "user", "content": user_input})
     st.markdown(f"**🧑 You:** {user_input}")
 
-    # ---- Generate bot reply ----
+    # Generate reply
     with st.spinner("Bot is typing..."):
-        # Instruction prompt for phi-2
-        prompt = f"You are a helpful coding assistant.\nUser: {user_input}\nAssistant:"
-        
-        # Generate response
         response = generator(
-            prompt,
-            max_length=250,        # longer responses
+            user_input,
+            max_length=100,
             num_return_sequences=1,
-            do_sample=True,        # adds variety
-            temperature=0.7        # creativity
+            pad_token_id=50256  # avoids warning for GPT-2
         )[0]["generated_text"]
 
-        # Extract reply (remove the prompt from generated text)
-        reply = response[len(prompt):].strip()
+        reply = response[len(user_input):].strip()
 
-    # Save & display bot reply
+    # Save & display reply
     st.session_state.messages.append({"role": "bot", "content": reply})
     st.markdown(f"**🤖 Bot:** {reply}")
